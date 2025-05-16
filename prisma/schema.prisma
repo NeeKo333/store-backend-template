@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String
+  nickname String 
+  password String
+  role Role @default(USER)
+  createdAt DateTime @default(now())
+  cart Cart? @relation
+  rating Rating[] @relation
+  refreshToken RefreshToken[] @relation
+
+  @@unique([email], map: "unique_email")
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+  user_id Int @unique
+  user User @relation(fields: [user_id], references: [id])
+  cartProduct CartProduct[] @relation
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  name String @unique
+  type_id Int
+  brand_id Int
+  rating Float
+  productType ProductType @relation(fields: [type_id], references: [id])
+  brand Brand @relation(fields: [brand_id], references: [id])
+  cartProduct CartProduct[] @relation
+  ratings Rating[] @relation
+}
+
+model CartProduct {
+  id Int @id @default(autoincrement())
+  cart_id Int
+  product_id Int
+  qty Int 
+  cart Cart @relation(fields: [cart_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model ProductType {
+  id Int @id @default(autoincrement())
+  type_name String @unique
+  product Product[] @relation
+  typeBrand TypeBrand[] @relation
+}
+
+model Brand {
+  id Int @id @default(autoincrement())
+  brand_name String @unique
+  product Product[] @relation
+  typeBrand TypeBrand[] @relation
+}
+
+model TypeBrand {
+  id Int @id @default(autoincrement())
+  type_id Int
+  brand_id Int
+  productType ProductType @relation(fields: [type_id], references: [id])
+  brand Brand @relation(fields: [brand_id], references: [id])
+}
+
+model Rating {
+  id Int @id @default(autoincrement())
+  user_id Int
+  product_id Int
+  rating_value Int
+  user User @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+model RefreshToken {
+  id Int @id @default(autoincrement())
+  user_id Int
+  token String
+  expires_at Int
+  revoked_at Boolean 
+  user User @relation(fields: [user_id], references: [id])
+}

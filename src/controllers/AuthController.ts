@@ -12,16 +12,22 @@ class AuthController {
     this.authService = authService;
     this.registeration = this.registeration.bind(this);
     this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
     this.refresh = this.refresh.bind(this);
     this.testJwt = this.testJwt.bind(this);
   }
 
   async registeration(req: Request, res: Response) {
     try {
-      const { nickname, email, password } = validationInputDataService.registration({ nickname: req.body.nickname, email: req.body.email, password: req.body.password });
-      const { user, accsess_token, refresh_token } = await this.authService.registration({ nickname, email, password });
-      if (!user || !user.id || !accsess_token || !refresh_token) res.status(500).json({ error: "Fail to register" });
-      res.cookie("accsess_token", accsess_token, {
+      const { nickname, email, password, role } = validationInputDataService.registration({
+        nickname: req.body.nickname,
+        email: req.body.email,
+        password: req.body.password,
+        role: req.body.role,
+      });
+      const { user, access_token, refresh_token } = await this.authService.registration({ nickname, email, password, role });
+      if (!user || !user.id || !access_token || !refresh_token) res.status(500).json({ error: "Fail to register" });
+      res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,
         maxAge: 60 * 60 * 1000,
@@ -43,9 +49,9 @@ class AuthController {
   async login(req: Request, res: Response) {
     try {
       const { password, email } = validationInputDataService.login({ email: req.body.email, password: req.body.password });
-      const { user, accsess_token, refresh_token } = await authService.login({ password, email });
-      if (!user.id || !accsess_token) throw new Error("Login controller error!");
-      res.cookie("accsess_token", accsess_token, {
+      const { user, access_token, refresh_token } = await authService.login({ password, email });
+      if (!user.id || !access_token) throw new Error("Login controller error!");
+      res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,
         maxAge: 60 * 60 * 1000,
@@ -64,14 +70,25 @@ class AuthController {
     }
   }
 
+  async logout(req: Request, res: Response) {
+    try {
+      const { userId, refresh_token } = validationInputDataService.logout(req.body.id, req.cookies.refresh_token);
+      const user = await authService.logout(userId, refresh_token);
+      res.status(200).json(user);
+    } catch (error) {
+      const errorObj = errorHandlerService.handleError(error);
+      res.status(500).json(errorObj);
+    }
+  }
+
   async refresh(req: Request, res: Response) {
     try {
       const current_refresh_token: string = req.cookies.refresh_token;
       if (!current_refresh_token) throw new Error("No refresh token");
 
       const { id: user_id } = decodeJwt(current_refresh_token);
-      const { accsess_token, refresh_token } = await authService.refresh({ user_id, refresh_token: current_refresh_token });
-      res.cookie("accsess_token", accsess_token, {
+      const { access_token, refresh_token } = await authService.refresh({ user_id, refresh_token: current_refresh_token });
+      res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,
         maxAge: 60 * 60 * 1000,

@@ -21,6 +21,7 @@ class ValidationInputDataService implements IValidationInputDataService {
       nickname: z.string(),
       password: z.string(),
       email: z.string().email("Некорректный email"),
+      role: z.enum(["USER", "ADMIN", "MODERATOR"]),
     });
 
     return this.parse(schema, registrationData);
@@ -33,6 +34,15 @@ class ValidationInputDataService implements IValidationInputDataService {
     });
 
     return this.parse(schema, loginData);
+  }
+
+  logout(userId: number, refresh_token: string): { userId: number; refresh_token: string } {
+    const schema = z.object({
+      userId: z.number(),
+      refresh_token: z.string(),
+    });
+
+    return this.parse(schema, { userId, refresh_token });
   }
 
   createProduct(productData: IProductData): IProductData {

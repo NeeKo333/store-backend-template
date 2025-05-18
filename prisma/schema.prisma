@@ -99,4 +99,6 @@ model RefreshToken {
   expires_at Int
   revoked_at Boolean 
   user User @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, token], name: "user_id_token")
 }

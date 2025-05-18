@@ -4,9 +4,9 @@ import { decodeJwt, checkJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 
 export const verfyJWT = async (req: Request, res: Response, next: NextFunction) => {
-  const accsessTokenFromCookies = req.cookies.accsess_token;
+  const accessTokenFromCookies = req.cookies.access_token;
 
-  if (!accsessTokenFromCookies || !checkJwt(accsessTokenFromCookies)) {
+  if (!accessTokenFromCookies || !checkJwt(accessTokenFromCookies)) {
     const refreshTokenFromCookies = req.cookies.refresh_token;
 
     if (!refreshTokenFromCookies) {
@@ -16,9 +16,9 @@ export const verfyJWT = async (req: Request, res: Response, next: NextFunction) 
 
     try {
       const { id: user_id } = decodeJwt(refreshTokenFromCookies);
-      const { accsess_token, refresh_token } = await authService.refresh({ user_id, refresh_token: refreshTokenFromCookies });
-      if (!accsess_token || !refresh_token) throw new Error("Fail to refresh tokens");
-      res.cookie("accsess_token", accsess_token, {
+      const { access_token, refresh_token } = await authService.refresh({ user_id, refresh_token: refreshTokenFromCookies });
+      if (!access_token || !refresh_token) throw new Error("Fail to refresh tokens");
+      res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,
         maxAge: 60 * 60 * 1000,

@@ -1,9 +1,11 @@
 import { IUser } from "./user.types";
+import { Role } from "@prisma/client";
 
 export interface IRegistrationData {
   nickname: string;
   email: string;
   password: string;
+  role: Role;
 }
 
 export interface ILoginData {
@@ -22,6 +24,7 @@ export interface IRegistrationResponseUser {
   id: number;
   email: string;
   nickname: string;
+  role: Role;
 }
 
 export interface IRegistrationResponseToken {
@@ -30,13 +33,13 @@ export interface IRegistrationResponseToken {
 
 export interface IRegistrationResponse<T> {
   user: T;
-  accsess_token?: string;
+  access_token?: string;
   refresh_token: string;
 }
 
 export interface ILoginResponse<T> {
   user: T;
-  accsess_token: string;
+  access_token: string;
   refresh_token: string;
 }
 
@@ -46,18 +49,20 @@ export interface IRefreshData {
 }
 
 export interface IRefreshResponse {
-  accsess_token: string;
+  access_token: string;
   refresh_token: string;
 }
 
 export interface IAuthService {
   registration(registrationData: IRegistrationData): Promise<IRegistrationResponse<IRegistrationResponseUser>>;
   login(loginData: ILoginData): Promise<ILoginResponse<IUser>>;
+  logout(userId: number, refresh_token: string): Promise<IUser>;
   refresh(refreshToken: IRefreshData): Promise<IRefreshResponse>;
 }
 
 export interface IUserRepository {
   registrationUser(registrationData: IRegistrationData): Promise<IRegistrationResponse<IRegistrationResponseUser>>;
   loginUser(loginData: ILoginData): Promise<ILoginResponse<IUser>>;
+  logoutUser(userId: number, refresh_token: string): Promise<IUser>;
   refreshTokens(refreshData: IRefreshData): Promise<IRefreshResponse>;
 }

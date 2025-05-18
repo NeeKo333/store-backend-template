@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IUserRepository } from "../types/auth.types.js";
 import { compareHash } from "../utils/hash.js";
 import { checkJwt, createJwt } from "../utils/jwt.js";
+import { IUser } from "../types/user.types.js";
 
 class UserRepository implements IUserRepository {
   private prisma;
@@ -21,17 +22,19 @@ class UserRepository implements IUserRepository {
             nickname: userData.nickname,
             email: userData.email,
             password: userData.password,
+            role: userData.role,
           },
 
           select: {
             id: true,
             email: true,
             nickname: true,
+            role: true,
           },
         });
 
-        const { token: accsessToken } = createJwt({ id: user.id, email: user.email }, 60);
-        const refreshToken = createJwt({ id: user.id, email: user.email }, 1440);
+        const { token: accessToken } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
+        const refreshToken = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
 
         const token = await tx.refreshToken.create({
           data: {
@@ -46,7 +49,7 @@ class UserRepository implements IUserRepository {
           },
         });
 
-        return { user, accsess_token: accsessToken, refresh_token: token.token };
+        return { user, access_token: accessToken, refresh_token: token.token };
       });
 
       return result;
@@ -66,10 +69,12 @@ class UserRepository implements IUserRepository {
       });
 
       if (!user) throw new Error("User no found");
-      if (await compareHash(user.password, password)) throw new Error("Password or email not allowed");
+      const passwordIsCompare = await compareHash(password, user.password);
 
-      const { token: accsess_token } = createJwt({ id: user.id, email }, 60);
-      const refresh_token = createJwt({ id: user.id, email }, 1440);
+      if (!passwordIsCompare) throw new Error("Password or email not allowed");
+
+      const { token: access_token } = createJwt({ id: user.id, email, role: user.role }, 60);
+      const refresh_token = createJwt({ id: user.id, email, role: user.role }, 1440);
 
       const token = await this.prisma.refreshToken.create({
         data: {
@@ -88,9 +93,45 @@ class UserRepository implements IUserRepository {
         id: user.id,
         nickname: user.nickname,
         email: user.email,
+        role: user.role,
       };
 
-      return { user: userObj, accsess_token, refresh_token: token.token };
+      return { user: userObj, access_token, refresh_token: token.token };
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async logoutUser(userId: number, refresh_token: string) {
+    try {
+      await this.prisma.refreshToken.update({
+        where: {
+          user_id_token: {
+            user_id: userId,
+            token: refresh_token,
+          },
+        },
+        data: {
+          revoked_at: true,
+        },
+      });
+
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+        select: {
+          id: true,
+          nickname: true,
+          email: true,
+          role: true,
+        },
+      });
+
+      if (!user) throw new Error("User not found");
+
+      return user;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;
@@ -110,8 +151,15 @@ class UserRepository implements IUserRepository {
       });
 
       if (!refreshToken) throw new Error("Refresh token not found");
-      const { token: accsess_token } = createJwt({ id: refreshData.user_id }, 60);
-      const { token: refresh_token } = createJwt({ id: refreshData.user_id }, 1440);
+      const user = await this.prisma.user.findFirst({
+        where: {
+          id: +refreshData.user_id,
+        },
+      });
+
+      if (!user) throw new Error("User not found");
+      const { token: access_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
+      const { token: refresh_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
       await this.prisma.refreshToken.update({
         where: {
           id: refreshToken.id,
@@ -119,7 +167,7 @@ class UserRepository implements IUserRepository {
         data: { revoked_at: false, token: refresh_token },
       });
 
-      return { accsess_token, refresh_token };
+      return { access_token, refresh_token };
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;

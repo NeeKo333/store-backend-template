@@ -7,7 +7,6 @@ export const hash = async (string: string) => {
 };
 
 export const compareHash = async (string: string, hash: string): Promise<boolean> => {
-  console.log(string, hash);
   const isCompared = await bcrypt.compare(string, hash);
   return isCompared;
 };

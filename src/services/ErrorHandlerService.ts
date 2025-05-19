@@ -1,5 +1,5 @@
-import { ZodError } from "zod";
 import z from "zod";
+import { ZodError } from "zod";
 import { IErrorHandlerService } from "../types/error.types";
 import { Prisma } from "@prisma/client";
 import { CustomError } from "../utils/CustomError.js";
@@ -14,8 +14,12 @@ class ErrorHandlerService implements IErrorHandlerService {
       throw new CustomError(error.message, error, "ZodValidationError");
     }
 
+    if (error instanceof CustomError) {
+      throw error;
+    }
+
     if (error instanceof Error) {
-      throw new Error(error.message);
+      throw error;
     }
 
     throw new Error("Unknown error");
@@ -32,7 +36,10 @@ class ErrorHandlerService implements IErrorHandlerService {
               message: `Some field on model ${prismaError.meta?.modelName} are duplicate`,
             };
           }
-          break;
+
+          return {
+            message: prismaError.message,
+          };
         case "ZodValidationError":
           const zodError = error.data as z.ZodError;
           const issues = zodError.issues.map((issueObj) => issueObj.message).join(", ");

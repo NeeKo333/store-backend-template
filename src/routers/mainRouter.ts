@@ -9,4 +9,4 @@ router.get("/", (res, req) => {
 });
 
 router.use("/auth", authRouter);
-router.use("/product", productRouter);
+router.use("/products", productRouter);

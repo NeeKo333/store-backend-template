@@ -45,6 +45,21 @@ class ValidationInputDataService implements IValidationInputDataService {
     return this.parse(schema, { userId, refresh_token });
   }
 
+  getAllProducts(offset: number, limit: number): { offset: number; limit: number } {
+    const schema = z.object({
+      offset: z.number(),
+      limit: z.number(),
+    });
+
+    return this.parse(schema, { offset, limit });
+  }
+
+  getProduct(productId: number): number {
+    const schema = z.number();
+
+    return this.parse(schema, productId);
+  }
+
   createProduct(productData: IProductData): IProductData {
     const schema = z.object({
       name: z.string(),

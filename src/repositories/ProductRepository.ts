@@ -5,10 +5,43 @@ import { IProductData, IProductRepository, IReturnedProductData } from "../types
 
 class ProductRepository implements IProductRepository {
   private prisma;
+
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
   }
 
+  async getAllProducts(offset: number, limit: number): Promise<IReturnedProductData[]> {
+    try {
+      const data = await this.prisma.product.findMany({
+        skip: offset,
+        take: limit,
+      });
+
+      if (!data.length) throw new Error("Products not found");
+
+      return data;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async getProduct(productId: number): Promise<IReturnedProductData> {
+    try {
+      const data = await this.prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+      });
+
+      if (!data) throw new Error("!Product not found");
+
+      return data;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
   async createProduct(productData: IProductData): Promise<IReturnedProductData> {
     try {
       const result = await this.prisma.product.create({
@@ -34,6 +67,7 @@ class ProductRepository implements IProductRepository {
           id: productId,
         },
       });
+      if (!result) throw new Error("Product not found");
 
       return result;
     } catch (error) {

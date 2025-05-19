@@ -14,12 +14,16 @@ export interface IReturnedProductData {
 }
 
 export interface IProductService {
+  getAllProducts(offset: number, limit: number): Promise<IReturnedProductData[]>;
+  getProduct(productId: number): Promise<IReturnedProductData>;
   createProduct(productData: IProductData): Promise<IReturnedProductData>;
   deleteProduct(productId: number): Promise<IReturnedProductData>;
   updateProduct(productId: number, productData: IProductData): Promise<IReturnedProductData>;
 }
 
 export interface IProductRepository {
+  getAllProducts(offset: number, limit: number): Promise<IReturnedProductData[]>;
+  getProduct(productId: number): Promise<IReturnedProductData>;
   createProduct(productData: IProductData): Promise<IReturnedProductData>;
   deleteProduct(productId: number): Promise<IReturnedProductData>;
   updateProduct(productId: number, productData: IProductData): Promise<IReturnedProductData>;

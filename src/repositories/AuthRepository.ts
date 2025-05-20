@@ -1,17 +1,19 @@
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { prisma } from "./index.js";
 import { PrismaClient } from "@prisma/client";
-import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IUserRepository } from "../types/auth.types.js";
+import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository } from "../types/auth.types.js";
 import { compareHash } from "../utils/hash.js";
 import { checkJwt, createJwt } from "../utils/jwt.js";
-import { IUser } from "../types/user.types.js";
 
-class UserRepository implements IUserRepository {
+class AuthRepository implements IAuthRepository {
   private prisma;
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
     this.registrationUser = this.registrationUser.bind(this);
+    this.loginUser = this.loginUser.bind(this);
+    this.logoutUser = this.logoutUser.bind(this);
+    this.refreshTokens = this.refreshTokens.bind(this);
   }
 
   async registrationUser(userData: IRegistrationData) {
@@ -144,7 +146,7 @@ class UserRepository implements IUserRepository {
 
       const refreshToken = await this.prisma.refreshToken.findFirst({
         where: {
-          user_id: +refreshData.user_id,
+          user_id: refreshData.user_id,
           token: refreshData.refresh_token,
           revoked_at: false,
         },
@@ -175,4 +177,4 @@ class UserRepository implements IUserRepository {
   }
 }
 
-export const userRepository = new UserRepository(prisma);
+export const authRepository = new AuthRepository(prisma);

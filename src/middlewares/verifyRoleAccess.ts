@@ -2,12 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { Role } from "@prisma/client";
 import { decodeJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
+import { RequestWithTokens } from "../types/auth.types.js";
 
 export const verifyRoleAccess = (role: Role) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: RequestWithTokens, res: Response, next: NextFunction) => {
     try {
-      const tokenFromCookies = req.cookies.access_token;
-      const data = decodeJwt(tokenFromCookies);
+      if (!req.tokens) throw new Error("No tokens");
+      const { access_token } = req.tokens;
+      const data = decodeJwt(access_token);
       if (!data.role || data.role !== role) {
         throw new Error("Not valid role");
       }

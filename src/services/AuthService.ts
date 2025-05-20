@@ -1,14 +1,13 @@
 import { errorHandlerService } from "./ErrorHandlerService.js";
-import { userRepository } from "../repositories/UserRepository.js";
+import { authRepository } from "../repositories/AuthRepository.js";
 import { hash } from "../utils/hash.js";
 import { IAuthService, ILoginData, IRefreshData, IRefreshResponse, IRegistrationData } from "../types/auth.types.js";
-import { IUserRepository } from "../types/auth.types.js";
-import e from "express";
+import { IAuthRepository } from "../types/auth.types.js";
 
 class AuthService implements IAuthService {
-  private userRepository;
-  constructor(userRepository: IUserRepository) {
-    this.userRepository = userRepository;
+  private authRepository;
+  constructor(authRepository: IAuthRepository) {
+    this.authRepository = authRepository;
 
     this.registration = this.registration.bind(this);
     this.login = this.login.bind(this);
@@ -20,7 +19,7 @@ class AuthService implements IAuthService {
     try {
       let { nickname, email, password, role } = registrationData;
       password = await hash(password);
-      const { user, access_token, refresh_token } = await this.userRepository.registrationUser({ nickname, email, password, role });
+      const { user, access_token, refresh_token } = await this.authRepository.registrationUser({ nickname, email, password, role });
       if (!user || !access_token || !refresh_token) throw new Error("No user or token");
       return { user, access_token, refresh_token };
     } catch (error) {
@@ -32,7 +31,7 @@ class AuthService implements IAuthService {
   async login(loginData: ILoginData) {
     try {
       let { email, password } = loginData;
-      const { user, access_token, refresh_token } = await userRepository.loginUser({ email, password });
+      const { user, access_token, refresh_token } = await this.authRepository.loginUser({ email, password });
       const userId = user.id;
       if (!userId) throw new Error("Fail to login");
       return { user, access_token, refresh_token };
@@ -44,7 +43,7 @@ class AuthService implements IAuthService {
 
   async logout(userId: number, refresh_token: string) {
     try {
-      const user = await userRepository.logoutUser(userId, refresh_token);
+      const user = await this.authRepository.logoutUser(userId, refresh_token);
       return user;
     } catch (error) {
       errorHandlerService.checkError(error);
@@ -54,7 +53,7 @@ class AuthService implements IAuthService {
 
   async refresh(refreshData: IRefreshData): Promise<IRefreshResponse> {
     try {
-      const { access_token, refresh_token } = await userRepository.refreshTokens(refreshData);
+      const { access_token, refresh_token } = await this.authRepository.refreshTokens(refreshData);
       return { access_token, refresh_token };
     } catch (error) {
       errorHandlerService.checkError(error);
@@ -63,4 +62,4 @@ class AuthService implements IAuthService {
   }
 }
 
-export const authService = new AuthService(userRepository);
+export const authService = new AuthService(authRepository);

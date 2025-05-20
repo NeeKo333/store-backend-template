@@ -4,6 +4,7 @@ import { validationInputDataService } from "../services/ValidationInputDataServi
 import { IAuthService } from "../types/auth.types.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { decodeJwt } from "../utils/jwt.js";
+import { RequestWithTokens } from "../types/auth.types.js";
 
 class AuthController {
   private authService: IAuthService;
@@ -70,9 +71,16 @@ class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response) {
+  async logout(req: RequestWithTokens, res: Response) {
     try {
-      const { userId, refresh_token } = validationInputDataService.logout(req.body.id, req.cookies.refresh_token);
+      if (!req.tokens) throw new Error("No tokens");
+      const { access_token: access, refresh_token: refresh } = req.tokens;
+      if (!access) {
+        res.status(500).json({ message: "No access token" });
+        return;
+      }
+      const jwtPayload = decodeJwt(access);
+      const { userId, refresh_token } = validationInputDataService.logout(jwtPayload.id, refresh);
       const user = await authService.logout(userId, refresh_token);
       res.status(200).json(user);
     } catch (error) {

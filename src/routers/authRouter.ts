@@ -6,6 +6,6 @@ export const authRouter = Router();
 
 authRouter.post("/registration", authController.registeration);
 authRouter.post("/login", authController.login);
-authRouter.post("/logout", authController.logout);
+authRouter.post("/logout", verfyJWT, authController.logout);
 authRouter.post("/refresh", authController.refresh);
 authRouter.get("/testJwt", verfyJWT, authController.testJwt);

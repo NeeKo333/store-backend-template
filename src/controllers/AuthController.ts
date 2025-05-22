@@ -20,13 +20,12 @@ class AuthController {
 
   async registeration(req: Request, res: Response) {
     try {
-      const { nickname, email, password, role } = validationInputDataService.registration({
+      const { user, access_token, refresh_token } = await this.authService.registration({
         nickname: req.body.nickname,
         email: req.body.email,
         password: req.body.password,
         role: req.body.role,
       });
-      const { user, access_token, refresh_token } = await this.authService.registration({ nickname, email, password, role });
       if (!user || !user.id || !access_token || !refresh_token) res.status(500).json({ error: "Fail to register" });
       res.cookie("access_token", access_token, {
         httpOnly: true,
@@ -49,8 +48,7 @@ class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      const { password, email } = validationInputDataService.login({ email: req.body.email, password: req.body.password });
-      const { user, access_token, refresh_token } = await authService.login({ password, email });
+      const { user, access_token, refresh_token } = await authService.login({ email: req.body.email, password: req.body.password });
       if (!user.id || !access_token) throw new Error("Login controller error!");
       res.cookie("access_token", access_token, {
         httpOnly: true,
@@ -74,14 +72,10 @@ class AuthController {
   async logout(req: RequestWithTokens, res: Response) {
     try {
       if (!req.tokens) throw new Error("No tokens");
-      const { access_token: access, refresh_token: refresh } = req.tokens;
-      if (!access) {
-        res.status(500).json({ message: "No access token" });
-        return;
-      }
-      const jwtPayload = decodeJwt(access);
-      const { userId, refresh_token } = validationInputDataService.logout(jwtPayload.id, refresh);
-      const user = await authService.logout(userId, refresh_token);
+      const { refresh_token } = req.tokens;
+      const jwtPayload = decodeJwt(refresh_token);
+
+      const user = await authService.logout(jwtPayload.id, refresh_token);
       res.status(200).json(user);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);

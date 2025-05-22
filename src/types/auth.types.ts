@@ -35,13 +35,13 @@ export interface IRegistrationResponseToken {
 export interface IRegistrationResponse<T> {
   user: T;
   access_token?: string;
-  refresh_token: string;
+  refresh_token?: string;
 }
 
 export interface ILoginResponse<T> {
   user: T;
-  access_token: string;
-  refresh_token: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface IRefreshData {

@@ -22,9 +22,8 @@ class ProductController {
 
   async getAllProducts(req: Request, res: Response) {
     try {
-      const rowOffset = req.query.offset ? +req.query.offset : 0;
-      const rowLimit = req.query.limit ? +req.query.limit : 10;
-      const { offset, limit } = this.validationInputDataService.getAllProducts(rowOffset, rowLimit);
+      const offset = req.query.offset ? +req.query.offset : 0;
+      const limit = req.query.limit ? +req.query.limit : 10;
       const result = await this.productService.getAllProducts(offset, limit);
 
       res.status(200).json(result);
@@ -36,9 +35,7 @@ class ProductController {
 
   async getProduct(req: Request, res: Response) {
     try {
-      const productId = this.validationInputDataService.getProduct(+req.params.id);
-      const result = await this.productService.getProduct(productId);
-
+      const result = await this.productService.getProduct(+req.params.id);
       res.status(200).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
@@ -48,8 +45,7 @@ class ProductController {
 
   async createProduct(req: Request, res: Response) {
     try {
-      const productData = this.validationInputDataService.createProduct({ name: req.body.name, type_id: req.body.type_id, brand_id: req.body.brand_id, rating: req.body.rating });
-      const product = await this.productService.createProduct(productData);
+      const product = await this.productService.createProduct({ name: req.body.name, type_id: req.body.type_id, brand_id: req.body.brand_id, rating: req.body.rating });
       res.status(201).json(product);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
@@ -59,8 +55,7 @@ class ProductController {
 
   async deleteProduct(req: Request, res: Response) {
     try {
-      const productId = this.validationInputDataService.deleteProduct(+req.params.id);
-      const deletedProduct = await this.productService.deleteProduct(productId);
+      const deletedProduct = await this.productService.deleteProduct(+req.params.id);
       res.status(200).json(deletedProduct);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
@@ -70,9 +65,7 @@ class ProductController {
 
   async updateProduct(req: Request, res: Response) {
     try {
-      const { productId, productData } = this.validationInputDataService.updateProduct(+req.params.id, req.body);
-      if (!productId) throw new Error("No product id");
-      const updatedProduct = await this.productService.updateProduct(productId, productData);
+      const updatedProduct = await this.productService.updateProduct(+req.params.id, req.body);
       res.status(200).json(updatedProduct);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);

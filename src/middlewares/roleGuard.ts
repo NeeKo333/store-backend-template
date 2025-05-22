@@ -4,7 +4,7 @@ import { decodeJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { RequestWithTokens } from "../types/auth.types.js";
 
-export const verifyRoleAccess = (role: Role) => {
+export const roleGuard = (role: Role) => {
   return (req: RequestWithTokens, res: Response, next: NextFunction) => {
     try {
       if (!req.tokens) throw new Error("No tokens");

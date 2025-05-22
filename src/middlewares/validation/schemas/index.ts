@@ -12,37 +12,24 @@ export const loginSchema = z.object({
   password: z.string(),
 });
 
-const logoutSchema = z.object({
-  userId: z.number(),
-  refresh_token: z.string(),
-});
-
-const getProductsSchema = z.object({
-  offset: z.number(),
-  limit: z.number(),
-});
-
-const getProductSchema = z.object({
-  id: z.number(),
-});
-
-const createProductSchema = z.object({
+export const productSchema = z.object({
   name: z.string(),
   type_id: z.number(),
   brand_id: z.number(),
   rating: z.number(),
 });
 
-const deleteProductSchema = z.object({
-  id: z.number(),
+export const offsetLimitSchema = z.object({
+  offset: z.preprocess((value) => {
+    return value !== undefined ? Number(value) : undefined;
+  }, z.number().min(0).optional().default(0)),
+  limit: z.preprocess((value) => {
+    return value !== undefined ? Number(value) : undefined;
+  }, z.number().min(1).optional().default(10)),
 });
 
-const updateProductSchema = z.object({
-  productId: z.number(),
-  productData: z.object({
-    name: z.string(),
-    type_id: z.number(),
-    brand_id: z.number(),
-    rating: z.number(),
-  }),
+export const idSchema = z.object({
+  id: z.preprocess((value) => {
+    return value !== undefined ? Number(value) : undefined;
+  }, z.number()),
 });

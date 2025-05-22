@@ -4,7 +4,7 @@ import { decodeJwt, checkJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { RequestWithTokens } from "../types/auth.types.js";
 
-export const verfyJWT = async (req: RequestWithTokens, res: Response, next: NextFunction) => {
+export const authGuard = async (req: RequestWithTokens, res: Response, next: NextFunction) => {
   const accessTokenFromCookies = req.cookies.access_token;
   const refreshTokenFromCookies = req.cookies.refresh_token;
 

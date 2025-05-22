@@ -3,6 +3,7 @@ import { authRepository } from "../repositories/AuthRepository.js";
 import { hash } from "../utils/hash.js";
 import { IAuthService, ILoginData, IRefreshData, IRefreshResponse, IRegistrationData } from "../types/auth.types.js";
 import { IAuthRepository } from "../types/auth.types.js";
+import { checkJwt, createJwt } from "../utils/jwt.js";
 
 class AuthService implements IAuthService {
   private authRepository;
@@ -53,6 +54,7 @@ class AuthService implements IAuthService {
 
   async refresh(refreshData: IRefreshData): Promise<IRefreshResponse> {
     try {
+      if (!checkJwt(refreshData.refresh_token)) throw new Error("Refresh token is not valid");
       const { access_token, refresh_token } = await this.authRepository.refreshTokens(refreshData);
       return { access_token, refresh_token };
     } catch (error) {

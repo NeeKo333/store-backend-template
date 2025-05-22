@@ -1,9 +1,9 @@
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { prisma } from "./index.js";
 import { PrismaClient } from "@prisma/client";
-import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository } from "../types/auth.types.js";
+import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository, IToken } from "../types/auth.types.js";
 import { compareHash } from "../utils/hash.js";
-import { checkJwt, createJwt } from "../utils/jwt.js";
+import { createJwt } from "../utils/jwt.js";
 
 class AuthRepository implements IAuthRepository {
   private prisma;
@@ -142,8 +142,6 @@ class AuthRepository implements IAuthRepository {
 
   async refreshTokens(refreshData: IRefreshData): Promise<IRefreshResponse> {
     try {
-      if (!checkJwt(refreshData.refresh_token)) throw new Error("Refresh token is not valid");
-
       const refreshToken = await this.prisma.refreshToken.findFirst({
         where: {
           user_id: refreshData.user_id,

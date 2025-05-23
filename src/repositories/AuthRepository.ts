@@ -1,7 +1,7 @@
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { prisma } from "./index.js";
-import { PrismaClient } from "@prisma/client";
-import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository, IToken } from "../types/auth.types.js";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository, IToken, IRegistrationResponseUser } from "../types/auth.types.js";
 import { compareHash } from "../utils/hash.js";
 import { createJwt } from "../utils/jwt.js";
 
@@ -10,51 +10,54 @@ class AuthRepository implements IAuthRepository {
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
-    this.registrationUser = this.registrationUser.bind(this);
+
+    this.createUser = this.createUser.bind(this);
+    this.createRefreshToken = this.createRefreshToken.bind(this);
     this.loginUser = this.loginUser.bind(this);
     this.logoutUser = this.logoutUser.bind(this);
     this.refreshTokens = this.refreshTokens.bind(this);
   }
 
-  async registrationUser(userData: IRegistrationData) {
+  async createUser(tx: Prisma.TransactionClient, registrationData: IRegistrationData) {
     try {
-      const result = await this.prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({
-          data: {
-            nickname: userData.nickname,
-            email: userData.email,
-            password: userData.password,
-            role: userData.role,
-          },
+      const user = await tx.user.create({
+        data: {
+          nickname: registrationData.nickname,
+          email: registrationData.email,
+          password: registrationData.password,
+          role: registrationData.role,
+        },
 
-          select: {
-            id: true,
-            email: true,
-            nickname: true,
-            role: true,
-          },
-        });
+        select: {
+          id: true,
+          email: true,
+          nickname: true,
+          role: true,
+        },
+      });
+      return user;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
 
-        const { token: accessToken } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
-        const refreshToken = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
+  async createRefreshToken(tx: Prisma.TransactionClient, tokenData: IToken, user: IRegistrationResponseUser) {
+    try {
+      const token = await tx.refreshToken.create({
+        data: {
+          token: tokenData.token,
+          user_id: user.id,
+          expires_at: tokenData.expires_at,
+          revoked_at: false,
+        },
 
-        const token = await tx.refreshToken.create({
-          data: {
-            token: refreshToken.token,
-            user_id: user.id,
-            expires_at: refreshToken.expires_at,
-            revoked_at: false,
-          },
-
-          select: {
-            token: true,
-          },
-        });
-
-        return { user, access_token: accessToken, refresh_token: token.token };
+        select: {
+          token: true,
+        },
       });
 
-      return result;
+      return token.token;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;

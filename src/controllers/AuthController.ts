@@ -26,7 +26,10 @@ class AuthController {
         password: req.body.password,
         role: req.body.role,
       });
-      if (!user || !user.id || !access_token || !refresh_token) res.status(500).json({ error: "Fail to register" });
+      if (!user || !user.id || !access_token || !refresh_token) {
+        res.status(500).json({ error: "Fail to register" });
+        return;
+      }
       res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,

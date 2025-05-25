@@ -17,6 +17,7 @@ export interface ILoginData {
 
 export interface IToken {
   id?: number;
+  user_id: number;
   token: string;
   expires_at: number;
   revoked_at: boolean;
@@ -51,7 +52,7 @@ export interface IRefreshData {
 }
 
 export interface IRefreshResponse {
-  access_token: string;
+  access_token?: string;
   refresh_token: string;
 }
 
@@ -64,10 +65,12 @@ export interface IAuthService {
 
 export interface IAuthRepository {
   createUser(tx: Prisma.TransactionClient, registrationData: IRegistrationData): Promise<IRegistrationResponseUser>;
-  createRefreshToken(tx: Prisma.TransactionClient, token: IToken, user: IRegistrationResponseUser): Promise<string>;
-  loginUser(loginData: ILoginData): Promise<ILoginResponse<IUser>>;
+  findUser(userId: number): Promise<IUser>;
+  createRefreshToken(tx: Prisma.TransactionClient | false, token: IToken, user: IRegistrationResponseUser): Promise<string>;
+  loginUser(loginData: ILoginData): Promise<IUser>;
   logoutUser(userId: number, refresh_token: string): Promise<IUser>;
-  refreshTokens(refreshData: IRefreshData): Promise<IRefreshResponse>;
+  findRefreshToken(refreshData: IRefreshData): Promise<IToken>;
+  updateRefreshToken(tokenId: number, newValue: string): Promise<IToken>;
 }
 
 export interface RequestWithTokens extends Request {

@@ -44,9 +44,13 @@ class AuthService implements IAuthService {
   async login(loginData: ILoginData) {
     try {
       let { email, password } = loginData;
-      const { user, access_token, refresh_token } = await this.authRepository.loginUser({ email, password });
+      const user = await this.authRepository.loginUser({ email, password });
       const userId = user.id;
       if (!userId) throw new Error("Fail to login");
+      const { token: access_token } = createJwt({ id: user.id, email, role: user.role }, 60);
+      const refresh_token_object = createJwt({ id: user.id, email, role: user.role }, 1440);
+
+      const refresh_token = await this.authRepository.createRefreshToken(false, refresh_token_object, user);
       return { user, access_token, refresh_token };
     } catch (error) {
       errorHandlerService.checkError(error);
@@ -67,8 +71,15 @@ class AuthService implements IAuthService {
   async refresh(refreshData: IRefreshData): Promise<IRefreshResponse> {
     try {
       if (!checkJwt(refreshData.refresh_token)) throw new Error("Refresh token is not valid");
-      const { access_token, refresh_token } = await this.authRepository.refreshTokens(refreshData);
-      return { access_token, refresh_token };
+      const { id: tokenId, user_id } = await this.authRepository.findRefreshToken(refreshData);
+      if (!tokenId) throw new Error("Fail to get refresh token id");
+      const user = await this.authRepository.findUser(user_id);
+      const { token: access_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
+      const { token: new_refresh_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
+
+      const updatedToken = await this.authRepository.updateRefreshToken(tokenId, new_refresh_token);
+
+      return { access_token, refresh_token: updatedToken.token };
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;

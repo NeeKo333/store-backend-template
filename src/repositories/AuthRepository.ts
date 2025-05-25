@@ -4,6 +4,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { ILoginData, IRefreshData, IRefreshResponse, IRegistrationData, IAuthRepository, IToken, IRegistrationResponseUser } from "../types/auth.types.js";
 import { compareHash } from "../utils/hash.js";
 import { createJwt } from "../utils/jwt.js";
+import { IUser } from "../types/user.types.js";
 
 class AuthRepository implements IAuthRepository {
   private prisma;
@@ -12,10 +13,12 @@ class AuthRepository implements IAuthRepository {
     this.prisma = prisma;
 
     this.createUser = this.createUser.bind(this);
-    this.createRefreshToken = this.createRefreshToken.bind(this);
+    this.findUser = this.findUser.bind(this);
     this.loginUser = this.loginUser.bind(this);
     this.logoutUser = this.logoutUser.bind(this);
-    this.refreshTokens = this.refreshTokens.bind(this);
+    this.createRefreshToken = this.createRefreshToken.bind(this);
+    this.findRefreshToken = this.findRefreshToken.bind(this);
+    this.updateRefreshToken = this.updateRefreshToken.bind(this);
   }
 
   async createUser(tx: Prisma.TransactionClient, registrationData: IRegistrationData) {
@@ -42,22 +45,15 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  async createRefreshToken(tx: Prisma.TransactionClient, tokenData: IToken, user: IRegistrationResponseUser) {
+  async findUser(userId: number) {
     try {
-      const token = await tx.refreshToken.create({
-        data: {
-          token: tokenData.token,
-          user_id: user.id,
-          expires_at: tokenData.expires_at,
-          revoked_at: false,
-        },
-
-        select: {
-          token: true,
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
         },
       });
-
-      return token.token;
+      if (!user) throw new Error("User not found");
+      return user;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;
@@ -78,22 +74,6 @@ class AuthRepository implements IAuthRepository {
 
       if (!passwordIsCompare) throw new Error("Password or email not allowed");
 
-      const { token: access_token } = createJwt({ id: user.id, email, role: user.role }, 60);
-      const refresh_token = createJwt({ id: user.id, email, role: user.role }, 1440);
-
-      const token = await this.prisma.refreshToken.create({
-        data: {
-          token: refresh_token.token,
-          user_id: user.id,
-          expires_at: refresh_token.expires_at,
-          revoked_at: false,
-        },
-
-        select: {
-          token: true,
-        },
-      });
-
       const userObj = {
         id: user.id,
         nickname: user.nickname,
@@ -101,7 +81,7 @@ class AuthRepository implements IAuthRepository {
         role: user.role,
       };
 
-      return { user: userObj, access_token, refresh_token: token.token };
+      return userObj;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;
@@ -143,34 +123,62 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  async refreshTokens(refreshData: IRefreshData): Promise<IRefreshResponse> {
+  async createRefreshToken(tx: Prisma.TransactionClient | false, tokenData: IToken, user: IRegistrationResponseUser) {
     try {
-      const refreshToken = await this.prisma.refreshToken.findFirst({
+      let token = null;
+      const prismaClient = tx ? tx : this.prisma;
+      token = await prismaClient.refreshToken.create({
+        data: {
+          token: tokenData.token,
+          user_id: user.id,
+          expires_at: tokenData.expires_at,
+          revoked_at: false,
+        },
+
+        select: {
+          token: true,
+        },
+      });
+
+      return token.token;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async findRefreshToken(refreshData: IRefreshData) {
+    try {
+      const refresh_token = await this.prisma.refreshToken.findFirst({
         where: {
           user_id: refreshData.user_id,
           token: refreshData.refresh_token,
           revoked_at: false,
         },
       });
+      if (!refresh_token) throw new Error("Refresh token not found");
+      return refresh_token;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
 
-      if (!refreshToken) throw new Error("Refresh token not found");
-      const user = await this.prisma.user.findFirst({
+  async updateRefreshToken(tokenId: number, newValue: string) {
+    try {
+      const updatedToken = await this.prisma.refreshToken.update({
         where: {
-          id: +refreshData.user_id,
+          id: tokenId,
+        },
+
+        data: {
+          revoked_at: false,
+          token: newValue,
         },
       });
 
-      if (!user) throw new Error("User not found");
-      const { token: access_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
-      const { token: refresh_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
-      await this.prisma.refreshToken.update({
-        where: {
-          id: refreshToken.id,
-        },
-        data: { revoked_at: false, token: refresh_token },
-      });
-
-      return { access_token, refresh_token };
+      if (!updatedToken) throw new Error("Fail to update refresh token");
+      return updatedToken;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;

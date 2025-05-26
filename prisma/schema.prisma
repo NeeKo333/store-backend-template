@@ -36,6 +36,7 @@ model User {
 model Cart {
   id Int @id @default(autoincrement())
   user_id Int @unique
+  isLocked Boolean @default(false)
   user User @relation(fields: [user_id], references: [id])
   cartProduct CartProduct[] @relation
 }

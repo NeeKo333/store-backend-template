@@ -123,14 +123,14 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  async createRefreshToken(tx: Prisma.TransactionClient | false, tokenData: IToken, user: IRegistrationResponseUser) {
+  async createRefreshToken(tx: Prisma.TransactionClient | false, tokenData: IToken, userId: number) {
     try {
       let token = null;
       const prismaClient = tx ? tx : this.prisma;
       token = await prismaClient.refreshToken.create({
         data: {
           token: tokenData.token,
-          user_id: user.id,
+          user_id: userId,
           expires_at: tokenData.expires_at,
           revoked_at: false,
         },

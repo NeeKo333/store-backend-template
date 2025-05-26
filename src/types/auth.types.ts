@@ -66,7 +66,7 @@ export interface IAuthService {
 export interface IAuthRepository {
   createUser(tx: Prisma.TransactionClient, registrationData: IRegistrationData): Promise<IRegistrationResponseUser>;
   findUser(userId: number): Promise<IUser>;
-  createRefreshToken(tx: Prisma.TransactionClient | false, token: IToken, user: IRegistrationResponseUser): Promise<string>;
+  createRefreshToken(tx: Prisma.TransactionClient | false, token: IToken, userId: number): Promise<string>;
   loginUser(loginData: ILoginData): Promise<IUser>;
   logoutUser(userId: number, refresh_token: string): Promise<IUser>;
   findRefreshToken(refreshData: IRefreshData): Promise<IToken>;

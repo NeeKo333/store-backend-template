@@ -1,6 +1,5 @@
 import { Response, Request } from "express";
 import { authService } from "../services/AuthService.js";
-import { validationInputDataService } from "../services/ValidationInputDataService.js";
 import { IAuthService } from "../types/auth.types.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { decodeJwt } from "../utils/jwt.js";
@@ -51,7 +50,7 @@ class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      const { user, access_token, refresh_token } = await authService.login({ email: req.body.email, password: req.body.password });
+      const { user, access_token, refresh_token } = await this.authService.login({ email: req.body.email, password: req.body.password });
       if (!user.id || !access_token) throw new Error("Login controller error!");
       res.cookie("access_token", access_token, {
         httpOnly: true,
@@ -78,7 +77,7 @@ class AuthController {
       const { refresh_token } = req.tokens;
       const jwtPayload = decodeJwt(refresh_token);
 
-      const user = await authService.logout(jwtPayload.id, refresh_token);
+      const user = await this.authService.logout(jwtPayload.id, refresh_token);
       res.status(200).json(user);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
@@ -92,7 +91,7 @@ class AuthController {
       if (!current_refresh_token) throw new Error("No refresh token");
 
       const { id: user_id } = decodeJwt(current_refresh_token);
-      const { access_token, refresh_token } = await authService.refresh({ user_id, refresh_token: current_refresh_token });
+      const { access_token, refresh_token } = await this.authService.refresh({ user_id, refresh_token: current_refresh_token });
       res.cookie("access_token", access_token, {
         httpOnly: true,
         secure: false,

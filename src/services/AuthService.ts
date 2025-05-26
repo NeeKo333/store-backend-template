@@ -1,11 +1,11 @@
-import { errorHandlerService } from "./ErrorHandlerService.js";
-import { authRepository } from "../repositories/AuthRepository.js";
-import { hash } from "../utils/hash.js";
 import { IAuthService, ILoginData, IRefreshData, IRefreshResponse, IRegistrationData } from "../types/auth.types.js";
 import { IAuthRepository } from "../types/auth.types.js";
-import { checkJwt, createJwt } from "../utils/jwt.js";
+import { errorHandlerService } from "./ErrorHandlerService.js";
+import { authRepository } from "../repositories/AuthRepository.js";
 import { prisma } from "../repositories/index.js";
 import { PrismaClient } from "@prisma/client";
+import { hash } from "../utils/hash.js";
+import { checkJwt, createJwt } from "../utils/jwt.js";
 
 class AuthService implements IAuthService {
   private authRepository;
@@ -29,7 +29,7 @@ class AuthService implements IAuthService {
         const user = await this.authRepository.createUser(tx, { nickname, email, password, role });
         const { token: access_token } = createJwt({ id: user.id, email: user.email, role: user.role }, 60);
         const refresh_token = createJwt({ id: user.id, email: user.email, role: user.role }, 1440);
-        const token = await this.authRepository.createRefreshToken(tx, refresh_token, user);
+        const token = await this.authRepository.createRefreshToken(tx, refresh_token, user.id);
         if (!user || !access_token || !token) throw new Error("No user or token");
         return { user, access_token, refresh_token: token };
       });
@@ -47,10 +47,10 @@ class AuthService implements IAuthService {
       const user = await this.authRepository.loginUser({ email, password });
       const userId = user.id;
       if (!userId) throw new Error("Fail to login");
-      const { token: access_token } = createJwt({ id: user.id, email, role: user.role }, 60);
-      const refresh_token_object = createJwt({ id: user.id, email, role: user.role }, 1440);
+      const { token: access_token } = createJwt({ id: userId, email, role: user.role }, 60);
+      const refresh_token_object = createJwt({ id: userId, email, role: user.role }, 1440);
 
-      const refresh_token = await this.authRepository.createRefreshToken(false, refresh_token_object, user);
+      const refresh_token = await this.authRepository.createRefreshToken(false, refresh_token_object, userId);
       return { user, access_token, refresh_token };
     } catch (error) {
       errorHandlerService.checkError(error);

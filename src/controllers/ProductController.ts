@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
-import { validationInputDataService } from "../services/ValidationInputDataService.js";
 import { productService } from "../services/ProductService.js";
 import { IProductService } from "../types/product.types";
-import { IValidationInputDataService } from "../types/validation.types.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 
 class ProductController {
   private productService;
-  private validationInputDataService;
 
-  constructor(productService: IProductService, validationInputDataService: IValidationInputDataService) {
-    this.validationInputDataService = validationInputDataService;
+  constructor(productService: IProductService) {
     this.productService = productService;
 
     this.getAllProducts = this.getAllProducts.bind(this);
@@ -74,4 +70,4 @@ class ProductController {
   }
 }
 
-export const productController = new ProductController(productService, validationInputDataService);
+export const productController = new ProductController(productService);

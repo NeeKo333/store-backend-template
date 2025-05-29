@@ -60,6 +60,8 @@ model CartProduct {
   qty Int 
   cart Cart @relation(fields: [cart_id], references: [id])
   product Product @relation(fields: [product_id], references: [id])
+
+  @@unique([cart_id, product_id], name: "cart_id_product_id")
 }
 
 model ProductType {

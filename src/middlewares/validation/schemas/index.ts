@@ -33,3 +33,12 @@ export const idSchema = z.object({
     return value !== undefined ? Number(value) : undefined;
   }, z.number()),
 });
+
+export const qtySchema = z.object({
+  id: z.preprocess((value) => {
+    return value !== undefined ? Number(value) : undefined;
+  }, z.number()),
+  quantity: z.preprocess((value) => {
+    return value !== undefined ? Number(value) : undefined;
+  }, z.number()),
+});

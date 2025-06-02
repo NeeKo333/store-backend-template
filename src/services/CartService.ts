@@ -1,4 +1,4 @@
-import { ICart, ICartInfo, ICartProduct, ICartService } from "../types/cart.types";
+import { ICartService } from "../types/cart.types";
 import { cartRepository } from "../repositories/CartRepository.js";
 import { ICartRepository } from "../types/cart.types";
 import { errorHandlerService } from "./ErrorHandlerService.js";
@@ -45,6 +45,47 @@ class CartService implements ICartService {
     try {
       const deletedProduct = await this.cartRepository.removeProduct(cartId, productId);
       return deletedProduct;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async updateCartProductQuantity(cartId: number, productId: number, quantity: number) {
+    try {
+      await this.cartRepository.updateCartProductQuantity(cartId, productId, quantity);
+      const cart = await this.cartRepository.getCartInfo(cartId);
+      return cart;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async cleanCart(cartId: number) {
+    try {
+      const cartInfo = await this.cartRepository.cleanCart(cartId);
+      return cartInfo;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async lockCart(cartId: number) {
+    try {
+      const lockedCart = await this.cartRepository.lockCart(cartId);
+      return lockedCart;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
+
+  async unlockCart(cartId: number) {
+    try {
+      const unlockedCart = await this.cartRepository.unlockCart(cartId);
+      return unlockedCart;
     } catch (error) {
       errorHandlerService.checkError(error);
       throw error;

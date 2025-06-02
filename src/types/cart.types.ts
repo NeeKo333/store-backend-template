@@ -22,21 +22,20 @@ export interface ICartService {
   getCartInfo(cartId: number): Promise<ICartInfo>;
   addProduct(cartId: number, productId: number): Promise<ICartProduct>;
   removeProduct(cartId: number, productId: number): Promise<ICartProduct>;
-  updateCartProductQuantity(cartId: number, productId: number, quantity: number): ICartInfo;
-  cleanCart?(cartId: number): ICartInfo;
-  createOrder?(cartId: number): void;
-  lockCart?(cartId: number): void;
-  unlockCart?(cartId: number): void;
+  updateCartProductQuantity(cartId: number, productId: number, quantity: number): Promise<ICartInfo>;
+  cleanCart(cartId: number): Promise<ICartInfo>;
+  lockCart(cartId: number): Promise<ICart>;
+  unlockCart(cartId: number): Promise<ICart>;
 }
 
 export interface ICartRepository {
+  createUserCart(userId: number): Promise<ICart>;
   findUserCart(userId: number): Promise<ICart>;
   getCartInfo(cartId: number): Promise<ICartInfo>;
   addProduct(cartId: number, productId: number): Promise<ICartProduct>;
   removeProduct(cartId: number, productId: number): Promise<ICartProduct>;
-  updateCartProductQuantity(cartId: number, productId: number, quantity: number): ICartInfo;
-  cleanCart?(cartId: number): ICartInfo;
-  createOrder?(cartId: number): void;
-  lockCart?(cartId: number): void;
-  unlockCart?(cartId: number): void;
+  updateCartProductQuantity(cartId: number, productId: number, quantity: number): Promise<ICartProduct>;
+  cleanCart(cartId: number): Promise<ICartInfo>;
+  lockCart(cartId: number): Promise<ICart>;
+  unlockCart(cartId: number): Promise<ICart>;
 }

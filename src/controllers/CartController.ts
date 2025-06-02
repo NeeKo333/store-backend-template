@@ -14,6 +14,8 @@ class CartController {
     this.getCartInfo = this.getCartInfo.bind(this);
     this.addProduct = this.addProduct.bind(this);
     this.removeProduct = this.removeProduct.bind(this);
+    this.updateCartProductQuantity = this.updateCartProductQuantity.bind(this);
+    this.cleanCart = this.cleanCart.bind(this);
   }
 
   async getCartInfo(req: RequestWithTokens, res: Response) {
@@ -71,8 +73,37 @@ class CartController {
       res.status(500).json(errorObj);
     }
   }
-  updateCartProductQuantity(cartId: number, productId: number, quantity: number) {}
-  cleanCart(cartId: number) {}
+
+  async updateCartProductQuantity(req: RequestWithTokens, res: Response) {
+    try {
+      if (!req.tokens) throw new Error("No tokens");
+      const { access_token, refresh_token } = req.tokens;
+      const productId = +req.params.id;
+      const quantity = +req.body.quantity;
+      const jwtPayload = decodeJwt(refresh_token);
+      const cart = await this.cartService.findUserCart(jwtPayload.id);
+      const result = await this.cartService.updateCartProductQuantity(cart.id, productId, quantity);
+      res.status(200).json(result);
+    } catch (error) {
+      const errorObj = errorHandlerService.handleError(error);
+      res.status(500).json(errorObj);
+    }
+  }
+
+  async cleanCart(req: RequestWithTokens, res: Response) {
+    try {
+      if (!req.tokens) throw new Error("No tokens");
+      const { access_token, refresh_token } = req.tokens;
+      const jwtPayload = decodeJwt(refresh_token);
+      const cart = await this.cartService.findUserCart(+jwtPayload.id);
+      const result = await this.cartService.cleanCart(cart.id);
+      res.status(200).json(result);
+    } catch (error) {
+      const errorObj = errorHandlerService.handleError(error);
+      res.status(500).json(errorObj);
+    }
+  }
+
   createOrder(cartId: number) {}
   lockCart(cartId: number) {}
   unlockCart(cartId: number) {}

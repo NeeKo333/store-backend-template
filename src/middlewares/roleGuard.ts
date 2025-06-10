@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { decodeJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { RequestWithTokens } from "../types/auth.types.js";
+import { HTTP_STATUSES } from "../constants/HTTP_STATUSES.js";
 
 export const roleGuard = (role: Role) => {
   return (req: RequestWithTokens, res: Response, next: NextFunction) => {
@@ -17,7 +18,7 @@ export const roleGuard = (role: Role) => {
       next();
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(401).json(errorObj);
+      res.status(HTTP_STATUSES.UNAUTHORIZED).json(errorObj);
     }
   };
 };

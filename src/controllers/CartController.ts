@@ -4,6 +4,7 @@ import { cartService } from "../services/CartService.js";
 import { ICartService } from "../types/cart.types";
 import { decodeJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
+import { HTTP_STATUSES } from "../constants/HTTP_STATUSES.js";
 
 class CartController {
   private cartService;
@@ -21,7 +22,7 @@ class CartController {
   async getCartInfo(req: RequestWithTokens, res: Response) {
     try {
       if (!req.tokens) {
-        res.status(401).json({ message: "No auth tokens" });
+        res.status(HTTP_STATUSES.UNAUTHORIZED).json({ message: "No auth tokens" });
         return;
       }
 
@@ -29,10 +30,10 @@ class CartController {
       const jwtPayload = decodeJwt(refresh_token);
       const cart = await this.cartService.findUserCart(jwtPayload.id);
       const result = await this.cartService.getCartInfo(cart.id);
-      res.status(200).json(result);
+      res.status(HTTP_STATUSES.OK).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -48,10 +49,10 @@ class CartController {
 
       const cart = await this.cartService.findUserCart(jwtPayload.id);
       const result = await this.cartService.addProduct(cart.id, productId);
-      res.status(200).json(result);
+      res.status(HTTP_STATUSES.OK).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -67,10 +68,10 @@ class CartController {
 
       const cart = await this.cartService.findUserCart(jwtPayload.id);
       const result = await this.cartService.removeProduct(cart.id, productId);
-      res.status(200).json(result);
+      res.status(HTTP_STATUSES.OK).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -83,10 +84,10 @@ class CartController {
       const jwtPayload = decodeJwt(refresh_token);
       const cart = await this.cartService.findUserCart(jwtPayload.id);
       const result = await this.cartService.updateCartProductQuantity(cart.id, productId, quantity);
-      res.status(200).json(result);
+      res.status(HTTP_STATUSES.OK).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -97,10 +98,10 @@ class CartController {
       const jwtPayload = decodeJwt(refresh_token);
       const cart = await this.cartService.findUserCart(+jwtPayload.id);
       const result = await this.cartService.cleanCart(cart.id);
-      res.status(200).json(result);
+      res.status(HTTP_STATUSES.OK).json(result);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 

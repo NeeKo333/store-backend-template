@@ -1,5 +1,6 @@
 type ResponseObject = {
-    message: string
+    message: string,
+    status: number
 }
 
 export interface IErrorHandlerService {

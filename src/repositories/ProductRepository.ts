@@ -42,6 +42,7 @@ class ProductRepository implements IProductRepository {
       throw error;
     }
   }
+
   async createProduct(productData: IProductData): Promise<IReturnedProductData> {
     try {
       const result = await this.prisma.product.create({

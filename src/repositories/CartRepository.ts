@@ -11,6 +11,23 @@ class CartRepository implements ICartRepository {
     this.findUserCart = this.findUserCart.bind(this);
   }
 
+  private async cartLockHandler(cartId: number) {
+    const cart = await this.getCart(cartId);
+    if (cart.isLocked) throw new Error("Cart os locked");
+  }
+
+  private async findProductInCart(cartId: number, productId: number) {
+    const product = await this.prisma.cartProduct.findUnique({
+      where: {
+        cart_id_product_id: {
+          cart_id: cartId,
+          product_id: productId,
+        },
+      },
+    });
+    return product ? product : null;
+  }
+
   async getCart(cartId: number) {
     const cart = await this.prisma.cart.findUnique({
       where: {
@@ -44,11 +61,6 @@ class CartRepository implements ICartRepository {
       errorHandlerService.checkError(error);
       throw error;
     }
-  }
-
-  async checkCartIsLocked(cartId: number) {
-    const cart = await this.getCart(cartId);
-    return cart.isLocked;
   }
 
   async createUserCart(user_id: number) {
@@ -89,17 +101,10 @@ class CartRepository implements ICartRepository {
 
   async addProduct(cartId: number, productId: number) {
     try {
-      if (await this.checkCartIsLocked(cartId)) throw new Error("Cart is locked");
+      await this.cartLockHandler(cartId);
 
       let result = null;
-      const selectedProductInCart = await this.prisma.cartProduct.findUnique({
-        where: {
-          cart_id_product_id: {
-            cart_id: cartId,
-            product_id: productId,
-          },
-        },
-      });
+      const selectedProductInCart = await this.findProductInCart(cartId, productId);
 
       if (!selectedProductInCart) {
         result = await this.prisma.cartProduct.create({
@@ -131,16 +136,9 @@ class CartRepository implements ICartRepository {
 
   async removeProduct(cartId: number, productId: number) {
     try {
-      if (await this.checkCartIsLocked(cartId)) throw new Error("Cart is locked");
+      await this.cartLockHandler(cartId);
 
-      const deletedProductInCart = await this.prisma.cartProduct.findUnique({
-        where: {
-          cart_id_product_id: {
-            cart_id: cartId,
-            product_id: productId,
-          },
-        },
-      });
+      const deletedProductInCart = await this.findProductInCart(cartId, productId);
       if (!deletedProductInCart) throw new Error("Product not found");
       const result = await this.prisma.cartProduct.delete({
         where: {
@@ -157,9 +155,9 @@ class CartRepository implements ICartRepository {
 
   async updateCartProductQuantity(cartId: number, productId: number, quantity: number) {
     try {
-      if (await this.checkCartIsLocked(cartId)) throw new Error("Cart is locked");
+      await this.cartLockHandler(cartId);
 
-      const qty = quantity > 0 ? quantity : 0;
+      if (quantity <= 0) throw new Error("Quantity is not valid");
 
       const updatedProduct = await this.prisma.cartProduct.update({
         where: {
@@ -169,7 +167,7 @@ class CartRepository implements ICartRepository {
           },
         },
         data: {
-          qty: qty,
+          qty: quantity,
         },
       });
 
@@ -182,7 +180,7 @@ class CartRepository implements ICartRepository {
 
   async cleanCart(cartId: number) {
     try {
-      if (await this.checkCartIsLocked(cartId)) throw new Error("Cart is locked");
+      await this.cartLockHandler(cartId);
       await this.prisma.cartProduct.deleteMany({
         where: {
           cart_id: cartId,

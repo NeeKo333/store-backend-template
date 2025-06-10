@@ -3,6 +3,7 @@ import { authService } from "../services/AuthService.js";
 import { decodeJwt, checkJwt } from "../utils/jwt.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { RequestWithTokens } from "../types/auth.types.js";
+import { HTTP_STATUSES } from "../constants/HTTP_STATUSES.js";
 
 export const authGuard = async (req: RequestWithTokens, res: Response, next: NextFunction) => {
   const accessTokenFromCookies = req.cookies.access_token;
@@ -10,7 +11,7 @@ export const authGuard = async (req: RequestWithTokens, res: Response, next: Nex
 
   if (!accessTokenFromCookies || !checkJwt(accessTokenFromCookies)) {
     if (!refreshTokenFromCookies) {
-      res.status(401).json({ message: "No refresh token" });
+      res.status(HTTP_STATUSES.UNAUTHORIZED).json({ message: "No refresh token" });
       return;
     }
 
@@ -44,7 +45,7 @@ export const authGuard = async (req: RequestWithTokens, res: Response, next: Nex
       next();
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(401).json(errorObj);
+      res.status(HTTP_STATUSES.UNAUTHORIZED).json(errorObj);
     }
   } else {
     req.tokens = {

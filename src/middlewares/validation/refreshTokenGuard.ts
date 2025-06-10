@@ -2,6 +2,7 @@ import { RequestWithTokens } from "../../types/auth.types.js";
 import { Response, NextFunction } from "express";
 import { z } from "zod";
 import { decodeJwt } from "../../utils/jwt.js";
+import { HTTP_STATUSES } from "../../constants/HTTP_STATUSES.js";
 
 export const refreshTokenGuard = (req: RequestWithTokens, res: Response, next: NextFunction) => {
   try {
@@ -18,6 +19,6 @@ export const refreshTokenGuard = (req: RequestWithTokens, res: Response, next: N
     schemaId.parse(jwtPayload.id);
     next();
   } catch (error) {
-    res.status(401).json({ message: "Token or token data is not valid" });
+    res.status(HTTP_STATUSES.UNAUTHORIZED).json({ message: "Token or token data is not valid" });
   }
 };

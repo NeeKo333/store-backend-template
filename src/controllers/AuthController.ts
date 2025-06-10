@@ -4,6 +4,7 @@ import { IAuthService } from "../types/auth.types.js";
 import { errorHandlerService } from "../services/ErrorHandlerService.js";
 import { decodeJwt } from "../utils/jwt.js";
 import { RequestWithTokens } from "../types/auth.types.js";
+import { HTTP_STATUSES } from "../constants/HTTP_STATUSES.js";
 
 class AuthController {
   private authService: IAuthService;
@@ -26,7 +27,7 @@ class AuthController {
         role: req.body.role,
       });
       if (!user || !user.id || !access_token || !refresh_token) {
-        res.status(500).json({ error: "Fail to register" });
+        res.status(HTTP_STATUSES.INTERNAL_SERVER_ERROR).json({ error: "Fail to register" });
         return;
       }
       res.cookie("access_token", access_token, {
@@ -41,10 +42,10 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: "strict",
       });
-      res.status(200).json({ user });
+      res.status(HTTP_STATUSES.CREATED).json({ user });
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -64,10 +65,10 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: "strict",
       });
-      res.status(200).json({ user });
+      res.status(HTTP_STATUSES.OK).json({ user });
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -78,10 +79,10 @@ class AuthController {
       const jwtPayload = decodeJwt(refresh_token);
 
       const user = await this.authService.logout(jwtPayload.id, refresh_token);
-      res.status(200).json(user);
+      res.status(HTTP_STATUSES.OK).json(user);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -105,15 +106,15 @@ class AuthController {
         sameSite: "strict",
       });
 
-      res.status(200).json({ message: "Tokens was refresh" });
+      res.status(HTTP_STATUSES.OK).json({ message: "Tokens was refresh" });
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(500).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
   async testJwt(req: Request, res: Response) {
-    res.status(200).json("Zaebis");
+    res.status(HTTP_STATUSES.OK).json("Zaebis");
   }
 }
 

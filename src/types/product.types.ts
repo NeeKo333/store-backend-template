@@ -11,6 +11,8 @@ export interface IReturnedProductData {
   type_id: number;
   brand_id: number;
   rating: number;
+  price: number;
+  stock: number;
 }
 
 export interface IProductService {

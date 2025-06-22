@@ -79,7 +79,7 @@ class CartController {
     try {
       if (!req.tokens) throw new Error("No tokens");
       const { access_token, refresh_token } = req.tokens;
-      const productId = +req.params.id;
+      const productId = +req.body.id;
       const quantity = +req.body.quantity;
       const jwtPayload = decodeJwt(refresh_token);
       const cart = await this.cartService.findUserCart(jwtPayload.id);

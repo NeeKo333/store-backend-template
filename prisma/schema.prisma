@@ -19,6 +19,12 @@ enum Role {
   MODERATOR
 }
 
+enum OrderStatus {
+  pending
+  access
+  canceled
+}
+
 model User {
   id Int @id @default(autoincrement())
   email String
@@ -29,6 +35,7 @@ model User {
   cart Cart? @relation
   rating Rating[] @relation
   refreshToken RefreshToken[] @relation
+  order Order[] @relation
 
   @@unique([email], map: "unique_email")
 }
@@ -39,6 +46,31 @@ model Cart {
   isLocked Boolean @default(false)
   user User @relation(fields: [user_id], references: [id])
   cartProduct CartProduct[] @relation
+  order Order[] @relation
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  user_id Int
+  cart_id Int
+  createdAt DateTime @default(now())
+  total_price Float
+  status OrderStatus @default(pending)
+  user User @relation(fields: [user_id], references: [id])
+  cart Cart @relation(fields: [cart_id], references: [id])
+
+  orderProduct OrderProduct[] @relation
+}
+
+model OrderProduct {
+  id Int @id @default(autoincrement())
+  order_id Int
+  product_id Int
+  qty Int
+  order Order @relation(fields: [order_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@unique([order_id, product_id], name: "order_id_product_id")
 }
 
 model Product {
@@ -47,10 +79,14 @@ model Product {
   type_id Int
   brand_id Int
   rating Float
+  price Float @default(10)
+  stock Int @default(5)
   productType ProductType @relation(fields: [type_id], references: [id])
   brand Brand @relation(fields: [brand_id], references: [id])
+  
   cartProduct CartProduct[] @relation
   ratings Rating[] @relation
+  orderProduct OrderProduct[] @relation
 }
 
 model CartProduct {

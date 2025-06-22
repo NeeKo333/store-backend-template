@@ -13,7 +13,7 @@ class CartRepository implements ICartRepository {
 
   private async cartLockHandler(cartId: number) {
     const cart = await this.getCart(cartId);
-    if (cart.isLocked) throw new Error("Cart os locked");
+    if (cart.isLocked) throw new Error("Cart is locked");
   }
 
   private async findProductInCart(cartId: number, productId: number) {

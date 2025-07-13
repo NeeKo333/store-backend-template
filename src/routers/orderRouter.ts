@@ -9,6 +9,6 @@ export const orderRouter = Router();
 
 orderRouter.post("/create", authGuard, refreshTokenGuard, orderController.createOrder);
 orderRouter.patch("/cancel", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.cancelOrder);
-orderRouter.patch("/complete", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.completeOrder);
+//orderRouter.patch("/complete", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.completeOrder);
 orderRouter.delete("/delete", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.deleteOrder);
 orderRouter.get("/list", authGuard, refreshTokenGuard, orderController.getUserOrders);

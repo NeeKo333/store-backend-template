@@ -14,6 +14,8 @@ class OrderRepository implements IOrderRepository {
   async createOrder(userId: number, cartId: number, products: Array<ICartProductShort>) {
     try {
       const result = await this.prisma.$transaction(async (tx) => {
+        let total_price = 0;
+
         for (const product of products) {
           const updateProductInStock = await tx.$executeRaw`
             UPDATE "Product"
@@ -21,13 +23,25 @@ class OrderRepository implements IOrderRepository {
             WHERE "id" = ${product.product_id} AND "stock" >= ${product.qty}`;
 
           if (updateProductInStock === 0) throw new Error("Product not found or not enough stock for product");
+
+          const productPrice = await this.prisma.product.findUnique({
+            where: {
+              id: product.product_id,
+            },
+            select: {
+              price: true,
+            },
+          });
+
+          if (!productPrice || productPrice.price < 0) throw new Error("Product not found or invalid price");
+          total_price += productPrice.price * product.qty;
         }
 
         const order = await tx.order.create({
           data: {
             user_id: userId,
             cart_id: cartId,
-            total_price: 0,
+            total_price,
           },
         });
 

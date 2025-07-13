@@ -1,7 +1,7 @@
 import { IOrder } from "../types/order.types.js";
 import { IPaymentService, IPaymentDTO } from "../types/payment.types.js";
+import { stripe } from "../infrastructure/StripeClient.js";
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_KEY || "");
 
 class PaymentService implements IPaymentService {
   private stripe;
@@ -29,10 +29,15 @@ class PaymentService implements IPaymentService {
   async startPayment(paymentDTO: IPaymentDTO) {
     try {
       const session = await this.stripe.checkout.sessions.create(paymentDTO);
+      if (!session) throw new Error("Fail to create payment checkout");
+      return session;
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Ошибка при создании сессии:", error.message);
       }
+      throw error;
     }
   }
 }
+
+export const paymentService = new PaymentService(stripe);

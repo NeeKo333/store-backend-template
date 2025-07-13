@@ -1,5 +1,5 @@
+import Stripe from "stripe";
 import { IOrder } from "./order.types";
-
 interface ILineItem {
   currency: string;
   unit_amount: number;
@@ -23,5 +23,5 @@ export interface IPaymentDTO {
 
 export interface IPaymentService {
   createPaymentDTO(orderData: IOrder): Promise<IPaymentDTO>;
-  startPayment(paymentDTO: IPaymentDTO): Promise<any>;
+  startPayment(paymentDTO: IPaymentDTO): Promise<Stripe.Response<Stripe.Checkout.Session>>;
 }

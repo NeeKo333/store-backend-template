@@ -16,6 +16,7 @@ class OrderController {
     this.completeOrder = this.completeOrder.bind(this);
     this.deleteOrder = this.deleteOrder.bind(this);
     this.getUserOrders = this.getUserOrders.bind(this);
+    this.startOrderPayment = this.startOrderPayment.bind(this);
   }
 
   async createOrder(req: RequestWithTokens, res: Response) {
@@ -42,7 +43,7 @@ class OrderController {
       res.status(HTTP_STATUSES.OK).json(canceledOrder);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(HTTP_STATUSES.BAD_GATEWAY).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -57,7 +58,7 @@ class OrderController {
       res.status(HTTP_STATUSES.OK).json(completedOrder);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(HTTP_STATUSES.BAD_GATEWAY).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -72,7 +73,7 @@ class OrderController {
       res.status(HTTP_STATUSES.OK).json(deletedOrder);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(HTTP_STATUSES.BAD_GATEWAY).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 
@@ -85,7 +86,22 @@ class OrderController {
       res.status(HTTP_STATUSES.OK).json(userOrders);
     } catch (error) {
       const errorObj = errorHandlerService.handleError(error);
-      res.status(HTTP_STATUSES.BAD_GATEWAY).json(errorObj);
+      res.status(errorObj.status).json(errorObj);
+    }
+  }
+
+  async startOrderPayment(req: RequestWithTokens, res: Response) {
+    try {
+      if (!req.tokens) throw new Error("No tokens");
+
+      const { access_token, refresh_token } = req.tokens;
+      const orderId = req.body.id;
+      const jwtPayload = decodeJwt(refresh_token);
+      const paymentSession = await this.orderService.startOrderPayment(jwtPayload.id, orderId);
+      res.status(HTTP_STATUSES.OK).json(paymentSession);
+    } catch (error) {
+      const errorObj = errorHandlerService.handleError(error);
+      res.status(errorObj.status).json(errorObj);
     }
   }
 }

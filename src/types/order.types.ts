@@ -1,5 +1,6 @@
 import { ICartProductShort } from "./cart.types.js";
 import { OrderStatus } from "@prisma/client";
+import Stripe from "stripe";
 
 export interface IOrder {
   id: number;
@@ -18,6 +19,7 @@ export interface IOrderService {
   completeOrder(orderId: number, userId: number): Promise<IOrder>;
   deleteOrder(orderId: number, userId: number): Promise<IOrder>;
   getUserOrders(userId: number): Promise<Array<IOrder>>;
+  startOrderPayment(userId: number, orderId: number): Promise<Stripe.Response<Stripe.Checkout.Session>>;
 }
 
 export interface IOrderRepository {

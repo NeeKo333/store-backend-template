@@ -12,3 +12,4 @@ orderRouter.patch("/cancel", authGuard, validationMiddleware({ body: idSchema })
 //orderRouter.patch("/complete", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.completeOrder);
 orderRouter.delete("/delete", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.deleteOrder);
 orderRouter.get("/list", authGuard, refreshTokenGuard, orderController.getUserOrders);
+orderRouter.post("/payment", authGuard, validationMiddleware({ body: idSchema }), refreshTokenGuard, orderController.startOrderPayment);

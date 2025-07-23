@@ -2,19 +2,23 @@ import { IOrder, IOrderService } from "../types/order.types.js";
 import { IOrderRepository } from "../types/order.types.js";
 import { IProductRepository } from "../types/product.types.js";
 import { ICartRepository } from "../types/cart.types.js";
+import { IPaymentService } from "../types/payment.types.js";
 import { orderRepository } from "../repositories/OrderRepository.js";
 import { productRepository } from "../repositories/ProductRepository.js";
 import { cartRepository } from "../repositories/CartRepository.js";
+import { paymentService } from "./PaymentService.js";
 import { errorHandlerService } from "./ErrorHandlerService.js";
 
 class OrderService implements IOrderService {
   private orderRepository;
   private productRepository;
   private cartRepository;
-  constructor(orderRepository: IOrderRepository, productRepository: IProductRepository, cartRepository: ICartRepository) {
+  private paymentService;
+  constructor(orderRepository: IOrderRepository, productRepository: IProductRepository, cartRepository: ICartRepository, paymentService: IPaymentService) {
     this.orderRepository = orderRepository;
     this.productRepository = productRepository;
     this.cartRepository = cartRepository;
+    this.paymentService = paymentService;
   }
 
   async createOrder(userId: number) {
@@ -87,6 +91,19 @@ class OrderService implements IOrderService {
       throw error;
     }
   }
+
+  async startOrderPayment(userId: number, orderId: number) {
+    try {
+      const userOrders = await this.getUserOrders(userId);
+      const currentOrder = userOrders.find((order) => order.id === orderId);
+      if (!currentOrder) throw new Error("Order not found");
+      const result = await this.paymentService.startPayment(currentOrder);
+      return result;
+    } catch (error) {
+      errorHandlerService.checkError(error);
+      throw error;
+    }
+  }
 }
 
-export const orderService = new OrderService(orderRepository, productRepository, cartRepository);
+export const orderService = new OrderService(orderRepository, productRepository, cartRepository, paymentService);

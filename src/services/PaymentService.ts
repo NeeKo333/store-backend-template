@@ -1,13 +1,13 @@
 import { IOrder } from "../types/order.types.js";
 import { IPaymentService, IPaymentDTO } from "../types/payment.types.js";
-import { stripe } from "../infrastructure/StripeClient.js";
-import Stripe from "stripe";
+import { stripeService } from "./StripeService.js";
+import { IStripeService } from "../types/payment.types.js";
 
 class PaymentService implements IPaymentService {
-  private stripe;
+  private stripeService;
 
-  constructor(stripe: Stripe) {
-    this.stripe = stripe;
+  constructor(stripeService: IStripeService) {
+    this.stripeService = stripeService;
   }
 
   createPaymentDTO(orderData: IOrder) {
@@ -28,9 +28,11 @@ class PaymentService implements IPaymentService {
       ],
       success_url: "https://www.youtube.com",
       cancel_url: "https://www.youtube.com",
-      metadata: {
-        orderId: orderData.id,
-        userId: orderData.user_id,
+      payment_intent_data: {
+        metadata: {
+          orderId: orderData.id,
+          userId: orderData.user_id,
+        },
       },
     };
 
@@ -40,7 +42,7 @@ class PaymentService implements IPaymentService {
   async startPayment(orderData: IOrder) {
     try {
       const paymentDTO = this.createPaymentDTO(orderData);
-      const session = await this.stripe.checkout.sessions.create(paymentDTO);
+      const session = await this.stripeService.createPaymentSession(paymentDTO);
       if (!session) throw new Error("Fail to create payment checkout");
       return session;
     } catch (error: unknown) {
@@ -52,4 +54,4 @@ class PaymentService implements IPaymentService {
   }
 }
 
-export const paymentService = new PaymentService(stripe);
+export const paymentService = new PaymentService(stripeService);
